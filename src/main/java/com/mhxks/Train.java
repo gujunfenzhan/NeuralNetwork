@@ -6,6 +6,8 @@ import com.mhxks.minst.MINST;
 import com.mhxks.wrapper.Parameter;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Train {
@@ -13,20 +15,30 @@ public class Train {
         Random random = new Random();
         NeuralNetwork784 nn = new NeuralNetwork784();
         //训练次数
-        int train_nu = 20;
+        int train_nu = 80;
         //训练图片数量,总计6万张
-        int train_size = 30000;
+        int train_size = 1000;
         //每批次训练多少张
         int batch_size = 50;
         //学习率
-        double w_learn_rate = 0.8;
+        /*
+        官方数据集
+        0.8
+        0.01
+        0.1
+         */
+        double w_learn_rate = 0.05;
         double b_learn_rate = 0.01;
         double c_learn_rate = 0.1;
 
 
+        List<String> list = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            list.add(""+i);
+        }
 
-
-        MINST minst = new MINST("minst","train-images.idx3-ubyte","train-labels.idx1-ubyte",train_size);
+        // minst = new MINST("minst","train-images.idx3-ubyte","train-labels.idx1-ubyte",train_size);
+        MINST minst = new MINST("my_data",list);
         Matrix input = minst.getImg(0);
         input = NNMath.reshape(input,784,1);
         Matrix y = minst.getLabelByOneHot(0);
@@ -62,15 +74,6 @@ public class Train {
                 parameter.divide(batch_size);
 
 
-                Matrix w_grad = parameter.w;
-                Matrix b_grad = parameter.b;
-                Matrix c_grad = parameter.c;
-                //更新梯度
-                weight = NNMath.add(weight,NNMath.Multiply(-w_learn_rate,w_grad));
-                b = NNMath.add(b,NNMath.Multiply(-b_learn_rate,b_grad));
-                c = NNMath.add(c,NNMath.Multiply(-c_learn_rate,c_grad));
-
-
 
                 double loss = 0;
                 for (int i2 = 0; i2 < 64; i2++) {
@@ -83,14 +86,36 @@ public class Train {
                     //System.out.println("正确结果:"+NNMath.maxIndex(randomLabel)+" 预测结果"+NNMath.maxIndex(p));
                 }
 
+                loss = loss/64.0d;
+                System.out.printf("Loss:%.15f\n",loss);
 
-                System.out.printf("Loss:%.15f\n",loss/64);
-                //随机一个图片查看Loss
+
+                Matrix w_grad = parameter.w;
+                Matrix b_grad = parameter.b;
+                Matrix c_grad = parameter.c;
+                //更新梯度
+                if(loss<0){
+                    weight = NNMath.add(weight,NNMath.Multiply(-w_learn_rate*loss,w_grad));
+                    b = NNMath.add(b,NNMath.Multiply(-b_learn_rate*loss,b_grad));
+                    c = NNMath.add(c,NNMath.Multiply(-c_learn_rate*loss,c_grad));
+                }
+                else{
+                    weight = NNMath.add(weight,NNMath.Multiply(-w_learn_rate,w_grad));
+                    b = NNMath.add(b,NNMath.Multiply(-b_learn_rate,b_grad));
+                    c = NNMath.add(c,NNMath.Multiply(-c_learn_rate,c_grad));
+                }
+
+
+
+
 
                 //缩小学习率
                 //w_learn_rate = w_learn_rate *0.9d;
                 ///b_learn_rate = b_learn_rate *0.9d;
                 //c_learn_rate = c_learn_rate *0.9d;
+
+
+
             }
 
 
@@ -103,6 +128,7 @@ public class Train {
 
         }
         Parameter parameter = new Parameter(b,c,weight);
-        parameter.saveParameter(new File("data.nn"));
+        parameter.saveParameter(new File("my_data.nn"));
+
     }
 }

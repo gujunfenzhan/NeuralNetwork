@@ -1,5 +1,6 @@
 package com.mhxks.minst;
 
+import com.mhxks.img.NNImage;
 import com.mhxks.math.Matrix;
 import com.mhxks.math.NNMath;
 
@@ -9,6 +10,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
 /*
 数据集读取
 读取.idx3-ubyte和idx-ubyte
@@ -20,6 +23,38 @@ public class MINST {
     public List<Matrix> images = new ArrayList<>();
     public List<Integer> labels = new ArrayList<>();
     public int item_Size;
+
+    public MINST(String data_name,List<String> labels)throws Exception{
+        String path = "data/"+data_name+"/train";
+        File file = new File(path);
+        for (String label : labels) {
+            File labelFile = new File(file,label);
+            for (File listFile : labelFile.listFiles()) {
+                NNImage nnImage = new NNImage(listFile);
+                this.images.add(nnImage.getMatrix());
+                this.labels.add(Integer.parseInt(label));
+            }
+
+
+        }
+    }
+    public void shuffle(){
+        List<Matrix> matrices = new ArrayList<>();
+        List<Integer> integers = new ArrayList<>();
+        Random random = new Random();
+        int size = this.images.size();
+        for (int i = 0; i < size; i++) {
+            int index = random.nextInt(matrices.size());
+            matrices.add(this.images.get(index));
+            this.images.remove(index);
+            integers.add(this.labels.get(index));
+            labels.remove(index);
+        }
+        this.images = matrices;
+        this.labels = integers;
+    }
+
+
     /*
     data_name: 数据文件夹名
     ImgFile: 图片数据文件名
@@ -75,6 +110,8 @@ public class MINST {
 
 
     }
+
+
     //从数据流中读取一个4 byte的int数据
     public int readInt(InputStream inputStream)throws Exception{
         byte[] bytes = new byte[4];

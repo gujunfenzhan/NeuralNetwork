@@ -25,9 +25,19 @@ public class NNImage {
 
 
     }
+    public NNImage(BufferedImage bufferedImage)throws Exception{
+        this.image = bufferedImage;
+        loadImage(null);
+    }
+
+
     public void loadImage(File file)throws Exception{
+
             // 读取灰度图像为BufferedImage对象
-            image = ImageIO.read(file);
+            if (file!=null){
+                image = ImageIO.read(file);
+            }
+
             //图片宽度
             int width = image.getWidth();
             //图片高度
